@@ -1,6 +1,7 @@
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import {
   BadgeCheck,
+  Bell,
   BookOpen,
   ChevronLeft,
   ChevronRight,
@@ -51,7 +52,7 @@ import './App.css'
 import './academy.css'
 
 type FeedMode = '全部' | '专家推荐' | '我的关注' | '热门精选'
-type SourceTag = '专家推荐' | '热门' | '精选'
+type SourceTag = '专家推荐' | '热门' | '精选' | '活动'
 type VerifiedTone = 'blue' | 'red' | 'yellow'
 type TrustChip = {
   label: string
@@ -602,6 +603,7 @@ const peerCollaborators = [
 
 const coverImageByTitle: Record<string, string> = {
   '《石灰吟》别再干讲了，我用闯关把“托物言志”讲活了': cover1,
+  '《石灰吟》同题创作活动：同一首诗，看看大家怎么上': activityBanner,
   '期末古诗默写太枯燥？我改成全班抢答赛了': cover2,
   '上《桂花雨》前，先让孩子办一场“气味记忆展”': cover3,
   '一张自动积分表，让小组评价终于不用课后补账': cover4,
@@ -1074,13 +1076,25 @@ const academyStudents = [
 ] as const
 
 const relatedResourceTitles = [
-  '期末古诗默写太枯燥？我改成全班抢答赛了',
   '《少年中国说》朗读没气势？试试这个分角色训练台',
   '《总也倒不了的老屋》用“请求树”讲，结构一下清楚',
   '《秋天的雨》先做感官卡，孩子写句子明显有画面了',
   '《搭船的鸟》别急着分析，先给翠鸟动作排时间轴',
   '《富饶的西沙群岛》别只画线，这张颜色词卡很好用',
 ] as const
+
+const limestoneActivityCard: InspirationCard = {
+  title: '《石灰吟》同题创作活动：同一首诗，看看大家怎么上',
+  author: '飞象社区',
+  savedCount: 2486,
+  remixCount: 318,
+  sourceTag: '活动',
+  affinity: ['热门精选'],
+  visual: 'paper',
+  likes: '1.2万',
+  note: '同题创作 / 活动作品流',
+  coverTitle: '石灰吟同题创作',
+}
 
 type FuelMediaType = '图片' | '视频'
 type FuelWorkTitle = (typeof fuelWorks)[number]['title']
@@ -1573,6 +1587,7 @@ function App() {
   const [activeTopTab, setActiveTopTab] = useState<TopNavTab>('推荐')
   const [detailCard, setDetailCard] = useState<InspirationCard | null>(null)
   const [isFuelDialogOpen, setIsFuelDialogOpen] = useState(false)
+  const [isFuelCardVisible, setIsFuelCardVisible] = useState(true)
   const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false)
   const [activeActivityScope, setActiveActivityScope] = useState<ActivityScope>('社区')
   const [selectedFuelWork, setSelectedFuelWork] = useState<FuelWorkTitle>(fuelWorks[0].title)
@@ -1591,6 +1606,7 @@ function App() {
   const [isTeacherRankPinned, setIsTeacherRankPinned] = useState(false)
   const [pullDistance, setPullDistance] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isBottomComposerVisible, setIsBottomComposerVisible] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const searchBoxRef = useRef<HTMLDivElement | null>(null)
   const pullStartY = useRef<number | null>(null)
@@ -1719,6 +1735,10 @@ function App() {
     setTeacherSeed((seed) => seed + 1)
   }
 
+  function handleWorkspaceScroll(event: React.UIEvent<HTMLElement>) {
+    setIsBottomComposerVisible(event.currentTarget.scrollTop > 260)
+  }
+
   if (activePage === 'limestoneActivity') {
     return (
       <LimestoneActivityPage
@@ -1771,45 +1791,67 @@ function App() {
             </div>
           ))}
         </section>
-        <section className="fuel-card" aria-label="教师加油站">
-          <button className="fuel-close" type="button" title="关闭">
-            <X size={14} />
-          </button>
-          <div className="fuel-card-head">
-            <span className="fuel-kicker">教师加油站·第4期</span>
-            <strong>分享教学灵感</strong>
+        <div className="sidebar-bottom">
+          {isFuelCardVisible && (
+            <section className="fuel-card" aria-label="教师加油站">
+              <button className="fuel-close" type="button" title="关闭" onClick={() => setIsFuelCardVisible(false)}>
+                <X size={14} />
+              </button>
+              <div className="fuel-card-head">
+                <span className="fuel-kicker">教师加油站·第4期</span>
+                <strong>分享教学灵感</strong>
+              </div>
+              <div className="fuel-reward">
+                <span className="fuel-reward-label">本期奖励</span>
+                <strong>+100</strong>
+              </div>
+              <p>把作品发布为一条教学灵感，与更多老师分享教学设计思路。</p>
+              <div className="fuel-meta">
+                <span>已领 1 天</span>
+                <span>8/24 结束</span>
+              </div>
+              <button className="fuel-action" type="button" onClick={() => setIsFuelDialogOpen(true)}>
+                去试试
+              </button>
+            </section>
+          )}
+          <div className="profile-dock">
+            <button
+              className="profile-strip"
+              type="button"
+              onClick={() => {
+                setActivePage('profile')
+                setDetailCard(null)
+              }}
+            >
+              <div className="avatar teacher-avatar">王</div>
+              <div>
+                <strong>王清越</strong>
+                <span>剩余积分：1194</span>
+              </div>
+            </button>
+            <button
+              className={`fuel-recall ${!isFuelCardVisible ? 'has-new' : ''}`}
+              type="button"
+              title="查看新活动"
+              onClick={() => setIsFuelCardVisible(true)}
+            >
+              <Bell size={17} />
+              <i />
+            </button>
           </div>
-          <div className="fuel-reward">
-            <span className="fuel-reward-label">本期奖励</span>
-            <strong>+100</strong>
-          </div>
-          <p>把作品发布为一条教学灵感，与更多老师分享教学设计思路。</p>
-          <div className="fuel-meta">
-            <span>已领 1 天</span>
-            <span>8/24 结束</span>
-          </div>
-          <button className="fuel-action" type="button" onClick={() => setIsFuelDialogOpen(true)}>
-            去试试
-          </button>
-        </section>
-        <button
-          className="profile-strip"
-          type="button"
-          onClick={() => {
-            setActivePage('profile')
-            setDetailCard(null)
-          }}
-        >
-          <div className="avatar teacher-avatar">王</div>
-          <div>
-            <strong>王清越</strong>
-            <span>剩余积分：1194</span>
-          </div>
-        </button>
+        </div>
       </aside>
 
       {detailCard ? (
-        <ResourceDetailPage card={detailCard} onBack={() => setDetailCard(null)} />
+        <ResourceDetailPage
+          card={detailCard}
+          onBack={() => setDetailCard(null)}
+          onOpenActivity={() => {
+            setActivePage('limestoneActivity')
+            setDetailCard(null)
+          }}
+        />
       ) : activePage === 'profile' ? (
         <TeacherProfilePage
           card={activeTeacherCard}
@@ -1826,6 +1868,7 @@ function App() {
           onPointerMove={updatePull}
           onPointerUp={finishPull}
           onPointerCancel={finishPull}
+          onScroll={handleWorkspaceScroll}
         >
           <div className={`refresh-veil ${isRefreshing ? 'show' : ''}`} aria-hidden={!isRefreshing}>
             <RefreshCw size={22} />
@@ -1839,40 +1882,41 @@ function App() {
             <span>{isRefreshing ? '正在刷新灵感流' : pullDistance > 58 ? '松开刷新' : '下拉刷新'}</span>
           </div>
           <div className="workspace-flow" style={{ transform: `translateY(${pullDistance * 0.36}px)` }}>
-            <section className="prompt-area">
-              <div className="assistant-title">
-                <div className="assistant-mark">
-                  <img src={feixiangLogo} alt="飞象老师" />
-                </div>
-                <h1>飞象老师，一句话生成专业级互动课件</h1>
-              </div>
-              <div className="prompt-box">
-                <p>
-                  互动课件｜帮我生成初英人教七下U1 Grammar Focus的互动课，通过精简而高效的语言活动，帮助学生掌握并巩固词汇、句型及原因状语从句。
-                </p>
-                <div className="prompt-actions">
-                  <button type="button" className="circle-button">
-                    <ImagePlus size={19} />
-                  </button>
-                  <span>教学动画</span>
-                  <span>教育应用 BETA</span>
-                  <span>教学游戏</span>
-                  <span>互动课件</span>
-                  <span>数据回收</span>
-                  <div className="send-actions">
-                    <button type="button" className="circle-button subtle">
-                      <Mic size={18} />
-                    </button>
-                    <button type="button" className="send-button">
-                      <SendHorizontal size={18} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </section>
-
             <section className="market">
-              <div className="market-topbar">
+              <div className="home-sticky-panel">
+                <section className="prompt-area">
+                  <div className="assistant-title">
+                    <div className="assistant-mark">
+                      <img src={feixiangLogo} alt="飞象老师" />
+                    </div>
+                    <h1>飞象老师，一句话生成专业级互动课件</h1>
+                  </div>
+                  <div className="prompt-box">
+                    <p>
+                      互动课件｜帮我生成初英人教七下U1 Grammar Focus的互动课，通过精简而高效的语言活动，帮助学生掌握并巩固词汇、句型及原因状语从句。
+                    </p>
+                    <div className="prompt-actions">
+                      <button type="button" className="circle-button">
+                        <ImagePlus size={19} />
+                      </button>
+                      <span>教学动画</span>
+                      <span>教育应用 BETA</span>
+                      <span>教学游戏</span>
+                      <span>互动课件</span>
+                      <span>数据回收</span>
+                      <div className="send-actions">
+                        <button type="button" className="circle-button subtle">
+                          <Mic size={18} />
+                        </button>
+                        <button type="button" className="send-button">
+                          <SendHorizontal size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <div className="market-topbar">
                 <div className="tabs" aria-label="灵感流分类">
                   {topNavTabs.map((tab) => (
                     <button
@@ -1908,12 +1952,10 @@ function App() {
                     />
                   )}
                 </div>
-              </div>
+                </div>
 
-              {isAcademyFeed ? (
-                <AcademyPage />
-              ) : (
-                <>
+                {!isAcademyFeed && (
+                  <>
               {isRecommendFeed && (
                 <section className="trend-zone-strip" aria-label="老师常看的备课专区">
                   <div className="trend-zone-row">
@@ -2007,6 +2049,14 @@ function App() {
                 </div>
               )}
 
+                  </>
+                )}
+              </div>
+
+              {isAcademyFeed ? (
+                <AcademyPage />
+              ) : (
+                <>
               {isRecommendFeed && (
                 <section className="activity-strip" aria-label="社区活动与热度榜">
                   <button
@@ -2174,7 +2224,14 @@ function App() {
               ) : (
                 <section className="card-grid" aria-label="AI教学灵感流">
                   {visibleCards.length > 0 ? (
-                    <MasonryFeed cards={visibleCards} onOpenCard={setDetailCard} />
+                    <MasonryFeed
+                      cards={visibleCards}
+                      onOpenCard={setDetailCard}
+                      onOpenProfile={() => {
+                        setActivePage('profile')
+                        setDetailCard(null)
+                      }}
+                    />
                   ) : (
                     <div className="search-empty">没有找到匹配的灵感卡，换个关键词试试。</div>
                   )}
@@ -2184,6 +2241,18 @@ function App() {
               )}
             </section>
           </div>
+          {isBottomComposerVisible && !isTeacherFeed && !isAcademyFeed && (
+            <section className="bottom-composer" aria-label="快速制作资源">
+              <Sparkles size={17} />
+              <span>教学游戏｜以《石灰吟》闯关为基础，生成本年级课文的互动资源，让学生边玩边学</span>
+              <button type="button" className="circle-button subtle" title="语音输入">
+                <Mic size={16} />
+              </button>
+              <button type="button" className="send-button" title="开始生成">
+                <SendHorizontal size={17} />
+              </button>
+            </section>
+          )}
         </section>
       )}
       {isFuelDialogOpen && (
@@ -3084,7 +3153,15 @@ function loadPosterImage(src: string) {
   })
 }
 
-function ResourceDetailPage({ card, onBack }: { card: InspirationCard; onBack: () => void }) {
+function ResourceDetailPage({
+  card,
+  onBack,
+  onOpenActivity,
+}: {
+  card: InspirationCard
+  onBack: () => void
+  onOpenActivity: () => void
+}) {
   const [resourceKey, setResourceKey] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isLineageOpen, setIsLineageOpen] = useState(false)
@@ -3092,10 +3169,10 @@ function ResourceDetailPage({ card, onBack }: { card: InspirationCard; onBack: (
   const [isSaved, setIsSaved] = useState(false)
   const [selectedLineageNodeId, setSelectedLineageNodeId] = useState('root')
   const [discussionItems, setDiscussionItems] = useState(discussionThreads)
-  const relatedResources = relatedResourceTitles
-    .map((title) => cardIndex[title])
-    .filter(Boolean)
-    .slice(0, 6) as InspirationCard[]
+  const relatedResources = [
+    limestoneActivityCard,
+    ...relatedResourceTitles.map((title) => cardIndex[title]).filter(Boolean),
+  ].slice(0, 6) as InspirationCard[]
   const selectedLineageNode = lineageNodes.find((node) => node.id === selectedLineageNodeId) ?? lineageNodes[0]
   const acceptedContributors = useMemo(
     () => discussionItems.filter((item) => item.accepted),
@@ -3172,7 +3249,7 @@ function ResourceDetailPage({ card, onBack }: { card: InspirationCard; onBack: (
             </div>
             <div className="related-grid">
               {relatedResources.map((resource) => (
-                <RelatedResourceCard card={resource} key={resource.title} />
+                <RelatedResourceCard card={resource} key={resource.title} onOpenActivity={onOpenActivity} />
               ))}
             </div>
           </section>
@@ -3553,13 +3630,33 @@ function FuelPublishDialog({
   )
 }
 
-function RelatedResourceCard({ card }: { card: InspirationCard }) {
+function RelatedResourceCard({
+  card,
+  onOpenActivity,
+}: {
+  card: InspirationCard
+  onOpenActivity: () => void
+}) {
   const coverImage = coverImageByTitle[card.title]
+  const isActivity = card.sourceTag === '活动'
 
   return (
-    <article className="related-card">
+    <article
+      className={`related-card ${isActivity ? 'related-card--activity' : ''}`}
+      onClick={isActivity ? onOpenActivity : undefined}
+      role={isActivity ? 'button' : undefined}
+      tabIndex={isActivity ? 0 : undefined}
+      onKeyDown={(event) => {
+        if (!isActivity) return
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onOpenActivity()
+        }
+      }}
+    >
       <div className="related-thumb">
         {coverImage ? <img src={coverImage} alt="" /> : <div className={`thumb-fallback cover-${card.visual}`} />}
+        {isActivity && <span className="related-status-pill">进行中</span>}
       </div>
       <div className="related-copy">
         <h3>
@@ -3567,12 +3664,12 @@ function RelatedResourceCard({ card }: { card: InspirationCard }) {
           {card.title}
         </h3>
         <div className="related-author">
-          <div className="avatar related-avatar">{card.author.slice(0, 1)}</div>
+          <div className={`avatar related-avatar ${isActivity ? 'related-avatar--gold' : ''}`}>{card.author.slice(0, 1)}</div>
           <span>{card.author}</span>
         </div>
         <div className="related-stats">
-          <span>收藏 {card.savedCount ?? card.remixCount ?? 0}</span>
-          <span>改编 {card.remixCount ?? 0}</span>
+          <span>{isActivity ? '参与' : '收藏'} {card.savedCount ?? card.remixCount ?? 0}</span>
+          <span>{isActivity ? '作品' : '改编'} {card.remixCount ?? 0}</span>
         </div>
       </div>
     </article>
@@ -3798,14 +3895,17 @@ function SearchDropdown({
 function InspirationCardItem({
   card,
   onOpen,
+  onOpenAuthor,
 }: {
   card: InspirationCard
   onOpen?: (card: InspirationCard) => void
+  onOpenAuthor?: (card: InspirationCard) => void
 }) {
   const trustChip = getTrustChip(card)
   const recommender = getNamedExpertRecommendation(card.recommender)
   const coverImage = coverImageByTitle[card.title]
   const isOpenable = Boolean(onOpen)
+  const canOpenAuthor = card.author === '王清越' && Boolean(onOpenAuthor)
 
   return (
     <article
@@ -3843,7 +3943,16 @@ function InspirationCardItem({
       </div>
       <div className="card-content">
         <h3>{card.title}</h3>
-        <div className="author-row">
+        <button
+          className={`author-row ${canOpenAuthor ? 'is-clickable' : ''}`}
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            if (canOpenAuthor) onOpenAuthor?.(card)
+          }}
+          disabled={!canOpenAuthor}
+          aria-label={canOpenAuthor ? '进入王清越主页' : undefined}
+        >
           <div className="avatar">{card.author.slice(0, 1)}</div>
           <div>
             <strong>
@@ -3852,7 +3961,7 @@ function InspirationCardItem({
             </strong>
             {card.identity && <span>{card.identity}</span>}
           </div>
-        </div>
+        </button>
         {card.hotComment && card.hotCommentLikes && card.hotCommentLikes > 100 && (
           <div className="hot-comment">
             <span>热评</span>
@@ -3886,9 +3995,11 @@ function badgeTone(badge: TeacherBadge) {
 function MasonryFeed({
   cards: sourceCards,
   onOpenCard,
+  onOpenProfile,
 }: {
   cards: InspirationCard[]
   onOpenCard: (card: InspirationCard) => void
+  onOpenProfile: () => void
 }) {
   const columns = distributeFeedItems(sourceCards)
   const limestoneCard = cards.find((card) => card.title.includes('石灰吟')) ?? sourceCards[0]
@@ -3905,6 +4016,7 @@ function MasonryFeed({
                 card={item.card}
                 key={`${item.card.title}-${item.card.likes}`}
                 onOpen={item.card.title.includes('石灰吟') ? () => onOpenCard(limestoneCard) : undefined}
+                onOpenAuthor={onOpenProfile}
               />
             ),
           )}
@@ -4103,13 +4215,14 @@ function makeVariantTitle(title: string, variant: string) {
   return `${title}｜${variant}`
 }
 
-function sourceClass(sourceTag: '热门' | '精选') {
+function sourceClass(sourceTag: '热门' | '精选' | '活动') {
+  if (sourceTag === '活动') return 'activity'
   if (sourceTag === '热门') return 'hot'
   return 'featured'
 }
 
-function shouldShowSourceBadge(sourceTag?: SourceTag): sourceTag is '热门' | '精选' {
-  return sourceTag === '热门' || sourceTag === '精选'
+function shouldShowSourceBadge(sourceTag?: SourceTag): sourceTag is '热门' | '精选' | '活动' {
+  return sourceTag === '热门' || sourceTag === '精选' || sourceTag === '活动'
 }
 
 function isInteractiveElement(target: EventTarget) {

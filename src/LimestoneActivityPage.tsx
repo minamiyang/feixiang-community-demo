@@ -11,8 +11,6 @@ import {
   Share2,
   Sparkles,
   ThumbsUp,
-  Trophy,
-  Users,
 } from 'lucide-react'
 import activityBanner from './assets/activity-banner-clean.png'
 import cover1 from './assets/covers/cover-1.png'
@@ -319,6 +317,7 @@ type LimestoneActivityPageProps = {
 }
 
 function LimestoneActivityPage({ onBack }: LimestoneActivityPageProps) {
+  const [isFollowing, setIsFollowing] = useState(true)
   const [workFilter, setWorkFilter] = useState<WorkFilter>('全部作品')
   const [page, setPage] = useState(1)
   const [discussionFilter, setDiscussionFilter] = useState<DiscussionFilter>('全部讨论')
@@ -409,6 +408,13 @@ function LimestoneActivityPage({ onBack }: LimestoneActivityPageProps) {
             <h1>《石灰吟》同题创作</h1>
             <p>同一首诗，不同课堂解法。分享你的创作，也看看老师们把“托物言志”玩出了哪些新花样。</p>
             <div className="hero-actions">
+              <button
+                className={`resource-action ${isFollowing ? 'followed-action' : 'light-action'}`}
+                type="button"
+                onClick={() => setIsFollowing(v => !v)}
+              >
+                {isFollowing ? '✓ 已关注' : '关注活动'}
+              </button>
               <button className="resource-action primary-action" type="button" onClick={() => showToast('作品提交入口已打开')}>
                 <Plus size={17} />
                 提交我的作品
@@ -418,7 +424,7 @@ function LimestoneActivityPage({ onBack }: LimestoneActivityPageProps) {
           <div className="hero-stats" aria-label="活动数据">
             <div>
               <strong>2486</strong>
-              <span>已参与</span>
+              <span>已关注</span>
             </div>
             <div>
               <strong>318</strong>
@@ -426,7 +432,7 @@ function LimestoneActivityPage({ onBack }: LimestoneActivityPageProps) {
             </div>
             <div>
               <strong>1.2万</strong>
-              <span>收藏投票</span>
+              <span>已投票</span>
             </div>
           </div>
         </div>
@@ -592,7 +598,7 @@ function LimestoneActivityPage({ onBack }: LimestoneActivityPageProps) {
             <div className="comment-box composer-box">
               <div className="comment-box-head">
                 <strong>参与讨论</strong>
-                <span>围绕这期活动交流改法</span>
+                <span>围绕这期活动交流想法</span>
               </div>
               <textarea value={draft} onChange={(event) => setDraft(event.target.value)} />
               <div className="composer-actions">
@@ -734,9 +740,7 @@ function LimestoneActivityPage({ onBack }: LimestoneActivityPageProps) {
       )}
 
       <footer className="page-footer">
-        <Trophy size={18} />
         <span>活动最终解释权归飞象老师所有</span>
-        <Users size={18} />
       </footer>
     </main>
   )

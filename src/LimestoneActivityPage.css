@@ -231,6 +231,11 @@
   color: var(--green-text);
 }
 
+.activity-page .followed-action {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--muted);
+}
+
 .activity-page .hero-stats {
   align-self: end;
   display: grid;
@@ -1180,15 +1185,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
   margin-top: 24px;
   color: var(--muted);
   font-size: 12px;
   font-weight: 780;
-}
-
-.activity-page .page-footer svg:first-child {
-  color: var(--orange);
 }
 
 @media (max-width: 1180px) {

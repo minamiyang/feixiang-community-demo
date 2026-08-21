@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import {
   BadgeCheck,
   Bell,
@@ -11,6 +11,7 @@ import {
   Heart,
   ImagePlus,
   Lightbulb,
+  Mail,
   MessageCircle,
   Megaphone,
   Mic,
@@ -32,6 +33,8 @@ import {
   Users,
   WandSparkles,
   X,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react'
 import cover1 from './assets/covers/cover-1.png'
 import cover2 from './assets/covers/cover-2.png'
@@ -45,11 +48,39 @@ import academyBanner from './assets/academy-banner.png'
 import academyExpertCourseCover from './assets/academy-expert-course.png'
 import academyTrainingCampCover from './assets/academy-training-camp.png'
 import activityBanner from './assets/activity-banner.png'
+import douGuimeiAvatar from './assets/avatars/dou-guimei.jpg'
+import wangQingyueAvatar from './assets/avatars/wang-qingyue.jpg'
+import blackboardTraceImage from './assets/detail/evidence/blackboard-trace.png'
+import classroomPhotoImage from './assets/detail/evidence/classroom-photo.png'
+import studentWorkImage from './assets/detail/evidence/student-work.png'
 import feixiangLogo from './assets/feixiang-logo.png'
+import monthlyReportBg1 from './assets/monthly-report/page-1.png'
+import monthlyReportBg2 from './assets/monthly-report/page-2.png'
+import monthlyReportBg3 from './assets/monthly-report/page-3.png'
+import monthlyReportBg4 from './assets/monthly-report/page-4.png'
+import monthlyReportBg5 from './assets/monthly-report/page-5.png'
+import monthlyReportBg6 from './assets/monthly-report/page-6.png'
+import monthlyReportBg7 from './assets/monthly-report/page-7.png'
+import monthlyReportBg8 from './assets/monthly-report/page-8.png'
+import teacherPhilosophyPosterBackground from './assets/teacher-philosophy-poster-background.png'
 import resourcePoster from './assets/detail/stone-liming-cover.png'
 import LimestoneActivityPage from './LimestoneActivityPage'
 import './App.css'
 import './academy.css'
+
+const MONTHLY_REPORT_CANVAS_WIDTH = 720
+const MONTHLY_REPORT_CANVAS_HEIGHT = 960
+const MONTHLY_REPORT_HORIZONTAL_GUTTER = 256
+const MONTHLY_REPORT_VERTICAL_GUTTER = 120
+
+function getMonthlyReportScale(viewportWidth: number, viewportHeight: number) {
+  const availableWidth = Math.max(0, viewportWidth - MONTHLY_REPORT_HORIZONTAL_GUTTER)
+  const availableHeight = Math.max(0, viewportHeight - MONTHLY_REPORT_VERTICAL_GUTTER)
+  return Math.max(0.05, Math.min(
+    availableWidth / MONTHLY_REPORT_CANVAS_WIDTH,
+    availableHeight / MONTHLY_REPORT_CANVAS_HEIGHT,
+  ))
+}
 
 type FeedMode = '全部' | '专家推荐' | '我的关注' | '热门精选'
 type SourceTag = '专家推荐' | '热门' | '精选' | '活动'
@@ -113,7 +144,7 @@ type TrendZone = '全部' | '公开课' | '项目化' | '跨学科' | '大单元
 type FeedSortOption = '综合' | '最新' | '最多点赞' | '最多评论' | '最多收藏'
 type ResourceTypeOption = '不限' | '教学动画' | '互动课件' | '教育应用'
 type PublishTimeOption = '不限' | '一周内' | '一月内' | '半年内'
-type TeacherRankTab = '贡献榜' | '活跃榜' | '新锐榜'
+type TeacherRankTab = '月度贡献榜' | '月度活跃榜' | '月度新锐榜'
 
 const feedSortOptions: FeedSortOption[] = ['综合', '最新', '最多点赞', '最多评论', '最多收藏']
 const resourceTypeOptions: ResourceTypeOption[] = ['不限', '教学动画', '互动课件', '教育应用']
@@ -336,7 +367,7 @@ const teacherProfiles: TeacherProfile[] = [
 ]
 
 const teacherRankings: Record<TeacherRankTab, { name: string; score: number }[]> = {
-  贡献榜: [
+  月度贡献榜: [
     { name: '王清越', score: 96 },
     { name: '窦桂梅', score: 94 },
     { name: '王崧舟', score: 92 },
@@ -348,7 +379,7 @@ const teacherRankings: Record<TeacherRankTab, { name: string; score: number }[]>
     { name: '林若水', score: 80 },
     { name: '李明澈', score: 78 },
   ],
-  活跃榜: [
+  月度活跃榜: [
     { name: '小满老师', score: 95 },
     { name: '王清越', score: 93 },
     { name: '林若水', score: 91 },
@@ -360,7 +391,7 @@ const teacherRankings: Record<TeacherRankTab, { name: string; score: number }[]>
     { name: '叶枝枝', score: 79 },
     { name: '周老师', score: 77 },
   ],
-  新锐榜: [
+  月度新锐榜: [
     { name: '叶枝枝', score: 97 },
     { name: '晓月老师', score: 94 },
     { name: '许宁', score: 92 },
@@ -376,18 +407,18 @@ const teacherRankings: Record<TeacherRankTab, { name: string; score: number }[]>
 
 const teacherRankSections: { title: TeacherRankTab; tip: string; tone: 'red' | 'orange' | 'yellow' }[] = [
   {
-    title: '贡献榜',
-    tip: '综合收藏、改编、复用和互动等表现加权生成。',
+    title: '月度贡献榜',
+    tip: '汇聚本月作品被收藏、改编与建议被采纳最多的老师。',
     tone: 'red',
   },
   {
-    title: '活跃榜',
-    tip: '按近期共备活跃、发新和互动频率综合生成。',
+    title: '月度活跃榜',
+    tip: '看见本月持续创作、分享与交流的老师。',
     tone: 'orange',
   },
   {
-    title: '新锐榜',
-    tip: '按新入驻后的作品增长和被看见速度综合生成。',
+    title: '月度新锐榜',
+    tip: '关注本月新入驻、正在建立影响力的老师。',
     tone: 'yellow',
   },
 ]
@@ -601,9 +632,25 @@ const peerCollaborators = [
   { name: '周', background: 'linear-gradient(135deg, #7c8eed, #d7e0ff)' },
 ] as const
 
+const monthlyReportPages = [
+  { title: '月志启封', background: monthlyReportBg1 },
+  { title: '备课总览', background: monthlyReportBg2 },
+  { title: '用心回响', background: monthlyReportBg3 },
+  { title: '高光一课', background: monthlyReportBg4 },
+  { title: '同行相望', background: monthlyReportBg5 },
+  { title: '理念主张', background: monthlyReportBg6 },
+  { title: '荣誉印记', background: monthlyReportBg7 },
+  { title: '共勉前行', background: monthlyReportBg8 },
+] as const
+
+const monthlyReportHourProfile = [
+  2, 2, 1, 1, 1, 2, 3, 5, 7, 9, 8, 6,
+  5, 6, 7, 9, 11, 13, 16, 18, 17, 14, 10, 6,
+]
+
 const coverImageByTitle: Record<string, string> = {
   '《石灰吟》别再干讲了，我用闯关把“托物言志”讲活了': cover1,
-  '《石灰吟》同题创作活动：同一首诗，看看大家怎么上': activityBanner,
+  '《石灰吟》同题创作活动：同一首诗，看看大家怎么上': teacherPhilosophyPosterBackground,
   '期末古诗默写太枯燥？我改成全班抢答赛了': cover2,
   '上《桂花雨》前，先让孩子办一场“气味记忆展”': cover3,
   '一张自动积分表，让小组评价终于不用课后补账': cover4,
@@ -611,6 +658,248 @@ const coverImageByTitle: Record<string, string> = {
   '三年级作文反馈卡：先分层，再让孩子看见下一步': cover6,
   '家长会别只放成绩，我做了一张班级成长证据墙': cover7,
   '不会编程也能做，学生真的会点进去玩的 AI 写作地图': cover8,
+}
+
+const avatarImageByName: Record<string, string> = {
+  王清越: wangQingyueAvatar,
+  窦桂梅: douGuimeiAvatar,
+}
+
+function MonthlyReportPoster({
+  pageIndex,
+  onClose,
+}: {
+  pageIndex: number
+  onClose: () => void
+}) {
+  const page = monthlyReportPages[pageIndex]
+  const posterStyle = { '--monthly-report-bg': `url(${page.background})` } as CSSProperties
+  const maxHour = Math.max(...monthlyReportHourProfile)
+
+  return (
+    <article className={`monthly-report-page monthly-report-page--${pageIndex + 1}`} style={posterStyle}>
+      <button className="monthly-report-close" type="button" title="关闭" onClick={onClose}>
+        <X size={17} />
+      </button>
+      {pageIndex === 0 && (
+        <div className="monthly-report-content monthly-report-cover-page">
+          <div className="monthly-report-kicker">2026 · 08</div>
+          <div className="monthly-report-creator">王清越</div>
+          <h1>你的教学月志已送达</h1>
+          <p className="monthly-report-cover-note">很荣幸，这个月飞象老师依旧<br />陪你行走在教育求索的路上</p>
+          <div className="monthly-report-theme">本月主题词 · 生长</div>
+        </div>
+      )}
+
+      {pageIndex === 1 && (
+        <div className="monthly-report-content monthly-report-overview-page">
+          <div className="monthly-report-kicker">备课总览</div>
+          <h2>
+            这个月，你把 <em>6</em> 堂好课送进了
+            <span className="monthly-report-break-line">同行视野。</span>
+          </h2>
+          <p className="monthly-report-subline">比起上个月，更多人打开了你的作品。</p>
+          <div className="monthly-report-stat-grid">
+            <div>
+              <span>浏览量</span>
+              <strong>12,080</strong>
+              <small>↑ 31%</small>
+            </div>
+            <div>
+              <span>被收藏</span>
+              <strong>6,128</strong>
+              <small>↑ 26%</small>
+            </div>
+            <div>
+              <span>被改编</span>
+              <strong>86</strong>
+              <small>↑ 18%</small>
+            </div>
+          </div>
+          <section className="monthly-report-hour-chart" aria-label="你更常在这些时候创作">
+            <div className="monthly-report-hour-chart-head">
+              <h3>你更常在这些时候备课</h3>
+              <p>习惯夜间备课</p>
+            </div>
+            <div className="monthly-report-hour-bars">
+              {monthlyReportHourProfile.map((value, hour) => (
+                <div className="monthly-report-hour-bar" key={hour}>
+                  <i style={{ height: `${Math.max(10, (value / maxHour) * 100)}%` }} />
+                  <span>{String(hour).padStart(2, '0')}</span>
+                </div>
+              ))}
+            </div>
+            <div className="monthly-report-hour-axis">
+              <span>00</span>
+              <span>06</span>
+              <span>12</span>
+              <span>18</span>
+              <span>24</span>
+            </div>
+            <p className="monthly-report-hour-note">夜深还在备课，辛苦了，老师。</p>
+          </section>
+        </div>
+      )}
+
+      {pageIndex === 2 && (
+        <div className="monthly-report-content monthly-report-craft-page">
+          <div className="monthly-report-kicker">用心回响</div>
+          <h2>
+            你打磨最深的课，
+            <span className="monthly-report-break-line">也是影响最广的那一堂。</span>
+          </h2>
+          <p className="monthly-report-subline">这是本月你花心思最多的作品：</p>
+          <article className="monthly-report-story-card">
+            <div className="monthly-report-story-media">
+              <img src={cover1} alt="《石灰吟》课件封面" />
+            </div>
+            <div className="monthly-report-story-body">
+              <h3>《石灰吟》别再干讲了，我用闯关把“托物言志”讲活了</h3>
+              <p>让古诗不只是背诵，而是一场孩子愿意进入的表达闯关。</p>
+            </div>
+          </article>
+          <div className="monthly-report-kpi-grid" aria-label="本月打磨数据">
+            <div className="monthly-report-kpi-card">
+              <strong>14</strong>
+              <span>次打磨</span>
+            </div>
+            <div className="monthly-report-kpi-card">
+              <strong>86</strong>
+              <span>次改编</span>
+            </div>
+            <div className="monthly-report-kpi-card">
+              <strong>6,128</strong>
+              <span>次收藏</span>
+            </div>
+          </div>
+          <p className="monthly-report-subline">你每多打磨一轮，就有更多人把它带进课堂。</p>
+        </div>
+      )}
+
+      {pageIndex === 3 && (
+        <div className="monthly-report-content monthly-report-craft-page">
+          <div className="monthly-report-kicker">高光一课</div>
+          <h2>这是本月最受关注的一课。</h2>
+          <p className="monthly-report-subline">同行反复看它、用它、改编它——</p>
+          <article className="monthly-report-story-card">
+            <div className="monthly-report-story-media">
+              <img src={cover3} alt="《桂花雨》课件封面" />
+            </div>
+            <div className="monthly-report-story-body">
+              <h3>上《桂花雨》前，我先让孩子办一场“气味记忆展”</h3>
+              <p>让散文里的味道先被看见，再慢慢回到文字里。</p>
+            </div>
+          </article>
+          <div className="monthly-report-kpi-grid" aria-label="本月打磨数据">
+            <div className="monthly-report-kpi-card">
+              <strong>8,320</strong>
+              <span>次查看</span>
+            </div>
+            <div className="monthly-report-kpi-card">
+              <strong>4,286</strong>
+              <span>次收藏</span>
+            </div>
+            <div className="monthly-report-kpi-card">
+              <strong>58</strong>
+              <span>次改编</span>
+            </div>
+          </div>
+          <p className="monthly-report-subline">你把抽象的“气味”，变成了孩子能说出来的记忆。</p>
+        </div>
+      )}
+
+      {pageIndex === 4 && (
+        <div className="monthly-report-content monthly-report-peer-page">
+          <div className="monthly-report-kicker">同行相望</div>
+          <h2 className="monthly-report-peer-title">
+            <span className="monthly-report-peer-lead">你的思考，帮到了——</span>
+            <span className="monthly-report-peer-numberline">
+              <em>17</em>
+              <strong>位老师</strong>
+            </span>
+          </h2>
+          <p className="monthly-report-peer-subline">
+            你的 <strong>23</strong> 条建议，已经进了同行的课堂。
+          </p>
+          <p className="monthly-report-peer-intro">这个月来往最密的，是这位老师——</p>
+          <article className="monthly-report-peer-card">
+            <img className="monthly-report-peer-avatar" src={douGuimeiAvatar} alt="窦桂梅头像" />
+            <div className="monthly-report-peer-card-body">
+              <div className="monthly-report-peer-name">窦桂梅</div>
+              <div className="monthly-report-peer-meta">清华附小语文老师</div>
+              <p className="monthly-report-peer-desc">你们围绕古诗教学互评教学想法，切磋了 <span className="monthly-report-peer-count">36</span> 次。</p>
+            </div>
+          </article>
+        </div>
+      )}
+
+      {pageIndex === 5 && (
+        <div className="monthly-report-content monthly-report-belief-page">
+          <div className="monthly-report-kicker">理念主张</div>
+          <h2>
+            8 月的你，一直在思考一件事：
+            <span className="monthly-report-break-line">如何让评价真正发生在课堂里。</span>
+          </h2>
+          <p className="monthly-report-belief-intro">这体现了你的教育理念取向——</p>
+          <div className="monthly-report-belief-tag">教学评一体化</div>
+          <section className="monthly-report-quotes">
+            <p>
+              <span>作品提示词</span>
+              <strong>你在生成教学动画时强调</strong>
+              <em>评价不等到课后，要在每一关里让学生知道自己为什么说得更清楚。</em>
+            </p>
+            <p>
+              <span>给同行的评论</span>
+              <strong>你在给同行作品的评论中写道</strong>
+              <em>这里可以把“清白”的判断交给孩子，用证据把表达托起来。</em>
+            </p>
+            <p>
+              <span>教学灵感</span>
+              <strong>你发布的教学灵感中有这么一句</strong>
+              <em>学生不是在背答案，而是在顺着证据把意思一点点讲出来。</em>
+            </p>
+          </section>
+        </div>
+      )}
+
+      {pageIndex === 6 && (
+        <div className="monthly-report-content monthly-report-honor-page">
+          <div className="monthly-report-kicker">荣誉印记</div>
+          <h2>8 月，有几个时刻值得被记住。</h2>
+          <p className="monthly-report-subline">这是这个月，你被看见的时刻。</p>
+          <section className="monthly-report-main-honor">
+            <span>08 · 18，你获评</span>
+            <strong>飞象优质创作者</strong>
+          </section>
+          <div className="monthly-report-timeline">
+            <p>
+              <span>08 · 05</span>
+              《石灰吟》进入语文热门精选
+            </p>
+            <p>
+              <span>08 · 13</span>
+              3 条建议被同行采纳
+            </p>
+            <p>
+              <span>08 · 21</span>
+              入选本月创作者榜单
+            </p>
+          </div>
+        </div>
+      )}
+
+      {pageIndex === 7 && (
+        <div className="monthly-report-content monthly-report-share-page">
+          <div className="monthly-report-kicker">共勉前行</div>
+          <blockquote>
+            一棵树摇动另一棵树，一朵云推动另一朵云，一个灵魂唤醒另一个灵魂。
+            <cite>—— 雅斯贝尔斯</cite>
+          </blockquote>
+          <p className="monthly-report-share-line">这个月，你是那棵摇动了 <em>17</em> 棵树的老师。</p>
+        </div>
+      )}
+    </article>
+  )
 }
 
 const cards: InspirationCard[] = [
@@ -691,7 +980,7 @@ const cards: InspirationCard[] = [
   {
     title: '三年级作文反馈卡：先分层，再让孩子看见下一步',
     author: '小满老师',
-    identity: '飞象优秀创作者',
+    identity: '飞象优质创作者',
     savedCount: 73,
     remixCount: 102,
     sourceTag: '专家推荐',
@@ -1588,6 +1877,13 @@ function App() {
   const [detailCard, setDetailCard] = useState<InspirationCard | null>(null)
   const [isFuelDialogOpen, setIsFuelDialogOpen] = useState(false)
   const [isFuelCardVisible, setIsFuelCardVisible] = useState(true)
+  const [isMonthlyReportTeaserOpen, setIsMonthlyReportTeaserOpen] = useState(false)
+  const [hasSeenMonthlyReport, setHasSeenMonthlyReport] = useState(false)
+  const [isMonthlyReportOpen, setIsMonthlyReportOpen] = useState(false)
+  const [activeMonthlyReportPage, setActiveMonthlyReportPage] = useState(0)
+  const [monthlyReportScale, setMonthlyReportScale] = useState(() =>
+    getMonthlyReportScale(window.innerWidth, window.innerHeight),
+  )
   const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false)
   const [activeActivityScope, setActiveActivityScope] = useState<ActivityScope>('社区')
   const [selectedFuelWork, setSelectedFuelWork] = useState<FuelWorkTitle>(fuelWorks[0].title)
@@ -1602,7 +1898,7 @@ function App() {
   const [teacherLocalOnly, setTeacherLocalOnly] = useState(false)
   const [feedSeed, setFeedSeed] = useState(0)
   const [teacherSeed, setTeacherSeed] = useState(0)
-  const [activeTeacherRank, setActiveTeacherRank] = useState<TeacherRankTab>('贡献榜')
+  const [activeTeacherRank, setActiveTeacherRank] = useState<TeacherRankTab>('月度贡献榜')
   const [isTeacherRankPinned, setIsTeacherRankPinned] = useState(false)
   const [pullDistance, setPullDistance] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -1656,6 +1952,34 @@ function App() {
       document.body.style.overflow = previousOverflow
     }
   }, [isFuelDialogOpen])
+
+  useEffect(() => {
+    if (!isMonthlyReportOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMonthlyReportOpen(false)
+      }
+    }
+
+    const updateScale = () => {
+      setMonthlyReportScale(getMonthlyReportScale(window.innerWidth, window.innerHeight))
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    updateScale()
+    window.addEventListener('resize', updateScale)
+    window.visualViewport?.addEventListener('resize', updateScale)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('resize', updateScale)
+      window.visualViewport?.removeEventListener('resize', updateScale)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isMonthlyReportOpen])
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
@@ -1733,6 +2057,29 @@ function App() {
 
   function refreshTeacherFeed() {
     setTeacherSeed((seed) => seed + 1)
+  }
+
+  function openMonthlyReport() {
+    setIsMonthlyReportTeaserOpen(false)
+    setActiveMonthlyReportPage(0)
+    setIsMonthlyReportOpen(true)
+  }
+
+  function closeMonthlyReport() {
+    setIsMonthlyReportOpen(false)
+  }
+
+  function closeMonthlyReportTeaser() {
+    setIsMonthlyReportTeaserOpen(false)
+  }
+
+  function turnMonthlyReportPage(direction: -1 | 1) {
+    setActiveMonthlyReportPage((page) => {
+      const nextPage = page + direction
+      if (nextPage < 0) return 0
+      if (nextPage >= monthlyReportPages.length) return monthlyReportPages.length - 1
+      return nextPage
+    })
   }
 
   function handleWorkspaceScroll(event: React.UIEvent<HTMLElement>) {
@@ -1824,7 +2171,7 @@ function App() {
                 setDetailCard(null)
               }}
             >
-              <div className="avatar teacher-avatar">王</div>
+              <UserAvatar name="王清越" className="avatar teacher-avatar" />
               <div>
                 <strong>王清越</strong>
                 <span>剩余积分：1194</span>
@@ -1839,9 +2186,91 @@ function App() {
               <Bell size={17} />
               <i />
             </button>
+            <button
+              className={`monthly-report-entry${hasSeenMonthlyReport ? '' : ' has-new'}`}
+              type="button"
+              title="查看月教学月志"
+              onClick={() => { setIsMonthlyReportTeaserOpen(true); setHasSeenMonthlyReport(true) }}
+            >
+              <Mail size={17} />
+              <i />
+            </button>
+            {isMonthlyReportTeaserOpen && (
+              <div className="monthly-report-teaser" role="dialog" aria-label="月教学月志">
+                <button
+                  className="monthly-report-teaser-close"
+                  type="button"
+                  title="关闭"
+                  onClick={closeMonthlyReportTeaser}
+                >
+                  <X size={13} />
+                </button>
+                <div className="monthly-report-teaser-head">
+                  <span className="monthly-report-teaser-tag">
+                    <Mail size={11} />
+                    8月
+                  </span>
+                </div>
+                <strong>查收本月教学月志</strong>
+                <p>已为你准备好 8 月的教学月志，点开看看这段时间的沉淀。</p>
+                <button className="monthly-report-teaser-action" type="button" onClick={openMonthlyReport}>
+                  展开月志
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </aside>
+
+      {isMonthlyReportOpen && (
+        <div className="monthly-report-layer" role="dialog" aria-modal="true" aria-label="8月创作者月报">
+          <button
+            className="monthly-report-backdrop"
+            type="button"
+            aria-label="关闭月报"
+            onClick={closeMonthlyReport}
+          />
+          <section
+            className="monthly-report-shell"
+            style={{ '--monthly-report-scale': `${monthlyReportScale}` } as CSSProperties}
+          >
+            <div className="monthly-report-stage">
+              <button
+                className="monthly-report-nav monthly-report-nav--left"
+                type="button"
+                title="上一页"
+                onClick={() => turnMonthlyReportPage(-1)}
+                disabled={activeMonthlyReportPage === 0}
+              >
+                <ChevronLeft size={22} />
+              </button>
+              <div className="monthly-report-canvas">
+                <MonthlyReportPoster pageIndex={activeMonthlyReportPage} onClose={closeMonthlyReport} />
+              </div>
+              <button
+                className="monthly-report-nav monthly-report-nav--right"
+                type="button"
+                title="下一页"
+                onClick={() => turnMonthlyReportPage(1)}
+                disabled={activeMonthlyReportPage === monthlyReportPages.length - 1}
+              >
+                <ChevronRight size={22} />
+              </button>
+            </div>
+            <div className="monthly-report-dots" aria-label="月报页码">
+              {monthlyReportPages.map((page, index) => (
+                <button
+                  className={index === activeMonthlyReportPage ? 'is-active' : ''}
+                  type="button"
+                  key={page.title}
+                  title={page.title}
+                  onClick={() => setActiveMonthlyReportPage(index)}
+                />
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
 
       {detailCard ? (
         <ResourceDetailPage
@@ -1985,10 +2414,9 @@ function App() {
                   <div className="follow-strip-row">
                     {followedTeachers.map((teacher) => (
                       <button className="follow-chip" type="button" key={teacher.id}>
-                        <div className="follow-avatar" style={{ background: teacher.background }}>
-                          {teacher.initial}
+                        <UserAvatar name={teacher.name} fallback={teacher.initial} className="follow-avatar" style={{ background: teacher.background }}>
                           {teacher.updated && <i className="follow-dot" aria-hidden="true" />}
-                        </div>
+                        </UserAvatar>
                         <span>{teacher.id}</span>
                       </button>
                     ))}
@@ -2268,6 +2696,31 @@ function App() {
   )
 }
 
+function UserAvatar({
+  name,
+  fallback,
+  className = 'avatar',
+  style,
+  title,
+  children,
+}: {
+  name: string
+  fallback?: string
+  className?: string
+  style?: CSSProperties
+  title?: string
+  children?: ReactNode
+}) {
+  const image = avatarImageByName[name]
+
+  return (
+    <div className={`${className} ${image ? 'avatar-photo' : ''}`} style={style} title={title ?? name}>
+      {image ? <img src={image} alt="" /> : fallback ?? name.slice(0, 1)}
+      {children}
+    </div>
+  )
+}
+
 function AcademyPage() {
   const [learningScope, setLearningScope] = useState<AcademyLearningScope>('本期')
 
@@ -2354,7 +2807,7 @@ function AcademyPage() {
                 <strong>{academyExpertCourse.title}</strong>
               </div>
               <div className="academy-course-person">
-                <div className="academy-avatar academy-avatar--expert">窦</div>
+                <UserAvatar name={academyExpertCourse.instructor} className="academy-avatar academy-avatar--expert" />
                 <div>
                   <strong>{academyExpertCourse.instructor}</strong>
                   <span>{academyExpertCourse.role}</span>
@@ -2388,7 +2841,7 @@ function AcademyPage() {
                 <strong>{academyTrainingCamp.title}</strong>
               </div>
               <div className="academy-course-person">
-                <div className="academy-avatar">王</div>
+                <UserAvatar name={academyTrainingCamp.instructor} className="academy-avatar" />
                 <div>
                   <strong>{academyTrainingCamp.instructor}</strong>
                   <span>{academyTrainingCamp.role}</span>
@@ -2507,7 +2960,6 @@ function TeacherProfilePage({
   const [addedSkills, setAddedSkills] = useState<string[]>([])
   const [keywordVotes, setKeywordVotes] = useState<Record<string, number>>({})
   const [isAgentOpen, setIsAgentOpen] = useState(false)
-  const [isGroupOpen, setIsGroupOpen] = useState(false)
   const [isShareCardOpen, setIsShareCardOpen] = useState(false)
   const profileWorks = teacherProfileWorks
   const featuredSkills = teacherSkills
@@ -2551,9 +3003,7 @@ function TeacherProfilePage({
           </div>
           <div className="profile-hero-body">
             <div className="profile-head">
-              <div className="profile-avatar">
-                <span>王</span>
-              </div>
+              <UserAvatar name="王清越" className="profile-avatar" />
               <div className="profile-head-copy">
                 <div className="profile-name-row">
                   <h1>王清越</h1>
@@ -2581,11 +3031,9 @@ function TeacherProfilePage({
                 ))}
               </div>
               <div className="profile-social-cluster">
-                <button
+                <div
                   className="profile-group-entry"
-                  type="button"
-                  aria-label="进入王清越的群聊"
-                  onClick={() => setIsGroupOpen((value) => !value)}
+                  aria-label="王清越的群聊，语文共备社，27 位老师在线"
                 >
                   <span className="profile-group-icon">
                     <Users size={18} />
@@ -2594,19 +3042,7 @@ function TeacherProfilePage({
                     <strong>群聊</strong>
                     <em>语文共备社</em>
                   </span>
-                </button>
-                {isGroupOpen ? (
-                  <div className="profile-group-popover">
-                    <div>
-                      <strong>27 位老师在线</strong>
-                      <span>正在共备《石灰吟》</span>
-                    </div>
-                    <p>
-                      <MessageCircle size={14} />
-                      新增 8 条课堂提问
-                    </p>
-                  </div>
-                ) : null}
+                </div>
               </div>
             </div>
           </div>
@@ -2705,7 +3141,7 @@ function TeacherProfilePage({
                 <div className="impact-track">
                   {scrolledExpertQuotes.map((quote, index) => (
                     <article className="impact-thread" key={`${quote.speaker}-${index}`}>
-                      <div className="impact-avatar">{quote.speaker.slice(0, 1)}</div>
+                      <UserAvatar name={quote.speaker} className="impact-avatar" />
                       <div className="impact-body">
                         <strong>{quote.speaker}</strong>
                         <p>{quote.text}</p>
@@ -2718,6 +3154,7 @@ function TeacherProfilePage({
             <section className="impact-panel impact-panel--peers">
               <div className="impact-panel-head">
                 <h3>同行评价</h3>
+                <button className="add-impression-btn" type="button">+ 添加印象</button>
                 <div className="collaborator-stack" aria-label="最近留下评价的人">
                   {peerCollaborators.slice(0, 5).map((person, index) => (
                     <span
@@ -2846,12 +3283,12 @@ function ProfileShareCard({
         </button>
         <div className="profile-share-modal-head">
           <span>分享主页</span>
-          <strong>王清越的飞象名片</strong>
+          <strong>王清越的主页</strong>
         </div>
         <div className="profile-share-poster" aria-label="王清越主页分享海报">
           <div className="profile-share-brand">飞象老师社区</div>
           <div className="profile-share-head">
-            <div className="profile-share-avatar">王</div>
+            <UserAvatar name="王清越" className="profile-share-avatar" />
             <div>
               <div className="profile-share-name">
                 <strong>王清越</strong>
@@ -2873,8 +3310,8 @@ function ProfileShareCard({
               </div>
             </div>
             <div className="profile-share-copy">
-              <strong>扫码查看主页</strong>
-              <span>关注作品、收藏改编和课堂经验</span>
+              <strong>扫码进入主页</strong>
+              <span>与我交流 AI 课堂实践</span>
               <em>feixiang.cn/teacher/wangqingyue</em>
             </div>
           </div>
@@ -2953,27 +3390,24 @@ async function downloadProfilePoster(works: TeacherProfileWork[]) {
   context.arc(640, 40, 92, 0, Math.PI * 2)
   context.stroke()
 
-  const avatarGradient = context.createLinearGradient(62, 96, 146, 180)
-  avatarGradient.addColorStop(0, '#62d3bd')
-  avatarGradient.addColorStop(1, '#0f9278')
-  context.fillStyle = avatarGradient
+  const profileAvatarImage = await loadPosterImage(wangQingyueAvatar)
+  context.fillStyle = '#e7f4ed'
   context.beginPath()
   context.arc(112, 142, 45, 0, Math.PI * 2)
   context.fill()
+
+  if (profileAvatarImage) {
+    context.save()
+    context.beginPath()
+    context.arc(112, 142, 45, 0, Math.PI * 2)
+    context.clip()
+    drawCoverImage(context, profileAvatarImage, 67, 97, 90, 90)
+    context.restore()
+  }
+
   context.strokeStyle = 'rgba(255, 255, 255, 0.94)'
   context.lineWidth = 5
   context.stroke()
-
-  context.fillStyle = 'rgba(255, 255, 255, 0.34)'
-  context.beginPath()
-  context.arc(96, 122, 15, 0, Math.PI * 2)
-  context.fill()
-
-  context.fillStyle = '#ffffff'
-  context.font = '900 34px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif'
-  context.textAlign = 'center'
-  context.textBaseline = 'middle'
-  context.fillText('王', 112, 142)
 
   context.textAlign = 'left'
   context.textBaseline = 'alphabetic'
@@ -3019,10 +3453,10 @@ async function downloadProfilePoster(works: TeacherProfileWork[]) {
 
   context.fillStyle = '#173a32'
   context.font = '900 34px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif'
-  context.fillText('扫码查看主页', 318, 422)
+  context.fillText('扫码进入主页', 318, 422)
   context.fillStyle = '#60736d'
   context.font = '760 19px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif'
-  context.fillText('关注作品、收藏改编和课堂经验', 318, 462)
+  context.fillText('与我交流 AI 课堂实践', 318, 462)
   context.fillStyle = '#0b765b'
   context.font = '900 18px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif'
   context.fillText('feixiang.cn/teacher/wangqingyue', 318, 502)
@@ -3165,19 +3599,48 @@ function ResourceDetailPage({
   const [resourceKey, setResourceKey] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isLineageOpen, setIsLineageOpen] = useState(false)
+  const [expandedEvidence, setExpandedEvidence] = useState<{
+    title: string
+    caption: string
+    image: string
+  } | null>(null)
   const [adapted, setAdapted] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
   const [selectedLineageNodeId, setSelectedLineageNodeId] = useState('root')
+  const [lineageZoom, setLineageZoom] = useState(0.8)
   const [discussionItems, setDiscussionItems] = useState(discussionThreads)
   const relatedResources = [
     limestoneActivityCard,
     ...relatedResourceTitles.map((title) => cardIndex[title]).filter(Boolean),
   ].slice(0, 6) as InspirationCard[]
   const selectedLineageNode = lineageNodes.find((node) => node.id === selectedLineageNodeId) ?? lineageNodes[0]
+  const isOriginalLineageNode = selectedLineageNode.id === 'root'
+  const lineageZoomPercent = Math.round(lineageZoom * 100)
   const acceptedContributors = useMemo(
     () => discussionItems.filter((item) => item.accepted),
     [discussionItems],
   )
+
+  useEffect(() => {
+    if (!expandedEvidence) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setExpandedEvidence(null)
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [expandedEvidence])
+
+  function updateLineageZoom(nextZoom: number) {
+    setLineageZoom(Math.min(1.35, Math.max(0.7, Number(nextZoom.toFixed(2)))))
+  }
 
   function acceptSuggestion(threadId: string) {
     setDiscussionItems((items) =>
@@ -3234,7 +3697,7 @@ function ResourceDetailPage({
                 onClick={() => setIsSaved((value) => !value)}
                 title="收藏资源"
               >
-                <Heart size={17} />
+                <Star size={17} />
                 {isSaved ? '已收藏' : '收藏资源'}
               </button>
               <button type="button" className="resource-action resource-action--primary" title="下载">
@@ -3263,7 +3726,7 @@ function ResourceDetailPage({
         <aside className="note-panel" aria-label="创作手记与社区互动">
           <article className="note-card note-card--hero">
             <div className="author-meta">
-              <div className="avatar detail-avatar">{card.author.slice(0, 1)}</div>
+              <UserAvatar name={card.author} className="avatar detail-avatar" />
               <div>
                 <strong>
                   {card.author}
@@ -3283,7 +3746,7 @@ function ResourceDetailPage({
               <span>教学游戏</span>
             </div>
             <div className="expert-note">
-              <div className="expert-avatar" title="窦桂梅">窦</div>
+              <UserAvatar name="窦桂梅" className="expert-avatar" title="窦桂梅" />
               <p>这个案例把“托物言志”从抽象概念转成了学生可体验的学习任务。</p>
             </div>
             <div className="detail-section-title">
@@ -3303,15 +3766,38 @@ function ResourceDetailPage({
               使用时建议先让学生独立点一遍，再小组复盘每一关的证据。基础弱的班可以打开“作者处境提示卡”，不要一上来就讲背景，先把物象和品质站稳。
             </p>
             <div className="evidence-grid">
-              <div className="evidence-card">
+              <button
+                className="evidence-card evidence-card--photo"
+                type="button"
+                onClick={() =>
+                  setExpandedEvidence({
+                    title: '课堂照片',
+                    caption: '投屏闯关中',
+                    image: classroomPhotoImage,
+                  })
+                }
+              >
+                <img src={classroomPhotoImage} alt="" />
                 <span>课堂照片</span>
                 <strong>投屏闯关中</strong>
-              </div>
-              <div className="evidence-card">
+              </button>
+              <button
+                className="evidence-card evidence-card--photo"
+                type="button"
+                onClick={() =>
+                  setExpandedEvidence({
+                    title: '学生作品',
+                    caption: '清白=品格',
+                    image: studentWorkImage,
+                  })
+                }
+              >
+                <img src={studentWorkImage} alt="" />
                 <span>学生作品</span>
                 <strong>清白=品格</strong>
-              </div>
+              </button>
               <div className="evidence-card evidence-card--video">
+                <img src={blackboardTraceImage} alt="" />
                 <div className="video-frame">
                   <div className="video-topline">
                     <span>板书留痕</span>
@@ -3334,6 +3820,7 @@ function ResourceDetailPage({
             type="button"
             onClick={() => {
               setSelectedLineageNodeId('root')
+              setLineageZoom(0.8)
               setIsLineageOpen(true)
             }}
           >
@@ -3347,14 +3834,14 @@ function ResourceDetailPage({
             <div className="co-section-head">
               <div className="detail-section-title compact-title">
                 <BadgeCheck size={18} />
-                <h2>共创名录</h2>
+                <h2>共创贡献</h2>
               </div>
-              <div className="co-count">感谢 {acceptedContributors.length} 位老师的巧思</div>
+              <div className="co-count">感谢 3 位老师参与打磨</div>
             </div>
             <div className="co-roster" aria-label="已采纳老师名录">
               {acceptedContributors.map((item) => (
                 <div className="co-roster-item" key={item.id}>
-                  <div className="avatar co-roster-avatar">{item.author.slice(0, 1)}</div>
+                  <UserAvatar name={item.author} className="avatar co-roster-avatar" />
                   <strong>{item.author}</strong>
                 </div>
               ))}
@@ -3366,15 +3853,12 @@ function ResourceDetailPage({
               <MessageCircle size={18} />
               <h2>全部讨论</h2>
             </div>
-            <div className="comment-input">有建议、反馈、求助，直接留给作者</div>
+            <div className="comment-input">欢迎留下你的建议、求助或课堂反馈</div>
             {discussionItems.map((comment) => (
               <article className={`discussion-thread ${comment.accepted ? 'is-accepted' : ''}`} key={comment.id}>
-                <div className="avatar discussion-avatar">{comment.author.slice(0, 1)}</div>
+                <UserAvatar name={comment.author} className="avatar discussion-avatar" />
                 <div className="discussion-body">
-                  <strong>
-                    {comment.author}
-                    <span className="discussion-handle">{comment.handle}</span>
-                  </strong>
+                  <strong>{comment.author}</strong>
                   <p>{comment.text}</p>
                   <div className="comment-actions">
                     <button type="button">
@@ -3401,7 +3885,7 @@ function ResourceDetailPage({
                     <div className="comment-children">
                       {comment.replies.map((reply) => (
                         <div className="comment-reply" key={`${comment.author}-${reply.author}`}>
-                          <div className="avatar reply-avatar">{reply.author.slice(0, 1)}</div>
+                          <UserAvatar name={reply.author} className="avatar reply-avatar" />
                           <div>
                             <strong>{reply.author}</strong>
                             <p>{reply.text}</p>
@@ -3451,66 +3935,125 @@ function ResourceDetailPage({
         </div>
       )}
 
+      {expandedEvidence && (
+        <div className="evidence-lightbox" role="dialog" aria-modal="true" aria-label={expandedEvidence.title}>
+          <button
+            className="evidence-lightbox-backdrop"
+            type="button"
+            aria-label="关闭图片"
+            onClick={() => setExpandedEvidence(null)}
+          />
+          <figure className="evidence-lightbox-card">
+            <button className="evidence-lightbox-close" type="button" title="关闭" onClick={() => setExpandedEvidence(null)}>
+              <X size={20} />
+            </button>
+            <img src={expandedEvidence.image} alt="" />
+            <figcaption>
+              <span>{expandedEvidence.title}</span>
+              <strong>{expandedEvidence.caption}</strong>
+            </figcaption>
+          </figure>
+        </div>
+      )}
+
       {isLineageOpen && (
-        <div className="lineage-layer" role="dialog" aria-label="改编谱系树">
+        <div className="lineage-layer" role="dialog" aria-label="改编脉络">
           <div className="lineage-dialog">
             <button type="button" className="lineage-close" onClick={() => setIsLineageOpen(false)} title="关闭">
               <X size={19} />
             </button>
-            <h2>改编谱系树</h2>
-            <p>AI 自动总结：粗枝代表主要演化方向，枝丫代表老师们继续长出的课堂用法。</p>
+            <h2>改编脉络</h2>
+            <p>好课会生长——从这里出发，让思考接力，一课开千枝。</p>
             <div className="lineage-map">
-              <svg className="lineage-links" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
-                {lineageNodes
-                  .filter((node) => node.parentId)
-                  .map((node) => {
-                    const parent = lineageNodes.find((item) => item.id === node.parentId)
-                    if (!parent) return null
-
-                    const curve = lineageCurve(parent, node)
-                    return (
-                      <path
-                        key={node.id}
-                        className={`lineage-link lineage-link--${node.size}`}
-                        d={curve}
-                        stroke={node.color}
-                        strokeWidth={node.weight}
-                      />
-                    )
-                  })}
-              </svg>
-              <div className="lineage-root-orbit" aria-hidden="true" />
-              {lineageNodes.map((node) => (
-                <button
-                  key={node.id}
-                  type="button"
-                  className={`lineage-node lineage-node--${node.size} ${
-                    selectedLineageNodeId === node.id ? 'is-selected' : ''
-                  }`}
+              <div className="lineage-toolbar" aria-label="改编脉络缩放">
+                <button type="button" onClick={() => updateLineageZoom(lineageZoom - 0.1)} title="缩小">
+                  <ZoomOut size={15} />
+                </button>
+                <span>{lineageZoomPercent}%</span>
+                <button type="button" onClick={() => updateLineageZoom(lineageZoom + 0.1)} title="放大">
+                  <ZoomIn size={15} />
+                </button>
+                <button type="button" onClick={() => updateLineageZoom(0.8)} title="完整显示">
+                  <RotateCcw size={15} />
+                </button>
+              </div>
+              <div
+                className="lineage-map-stage"
+                style={{ width: `max(100%, ${1000 * lineageZoom}px)`, height: `${620 * lineageZoom}px` }}
+              >
+                <div
+                  className="lineage-map-canvas"
                   style={
                     {
-                      left: `${node.x}%`,
-                      top: `${node.y}%`,
-                      '--node-color': node.color,
+                      left: `calc((100% - ${1000 * lineageZoom}px) / 2)`,
+                      '--lineage-zoom': lineageZoom,
                     } as CSSProperties
                   }
-                  onClick={() => setSelectedLineageNodeId(node.id)}
-                  title={`改编人：${node.author}`}
                 >
-                  <span>{node.label}</span>
-                  <strong>{node.author}</strong>
-                </button>
-              ))}
+                  <svg className="lineage-links" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
+                    {lineageNodes
+                      .filter((node) => node.parentId)
+                      .map((node) => {
+                        const parent = lineageNodes.find((item) => item.id === node.parentId)
+                        if (!parent) return null
+
+                        const curve = lineageCurve(parent, node)
+                        return (
+                          <path
+                            key={node.id}
+                            className={`lineage-link lineage-link--${node.size}`}
+                            d={curve}
+                            stroke={node.color}
+                            strokeWidth={node.weight}
+                          />
+                        )
+                      })}
+                  </svg>
+                  <div className="lineage-root-orbit" aria-hidden="true" />
+                  {lineageNodes.map((node) => {
+                    const isOriginalNode = node.id === 'root'
+
+                    return (
+                      <button
+                        key={node.id}
+                        type="button"
+                        className={`lineage-node lineage-node--${node.size} ${
+                          selectedLineageNodeId === node.id ? 'is-selected' : ''
+                        }`}
+                        style={
+                          {
+                            left: `${node.x}%`,
+                            top: `${node.y}%`,
+                            '--node-color': node.color,
+                          } as CSSProperties
+                        }
+                        onClick={() => {
+                          if (!isOriginalNode) setSelectedLineageNodeId(node.id)
+                        }}
+                        disabled={isOriginalNode}
+                        title={isOriginalNode ? '原创起点' : `改编人：${node.author}`}
+                      >
+                        <span>{node.label}</span>
+                        <strong>{node.author}</strong>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
             <div className="lineage-detail">
               <div>
                 <span>当前节点</span>
                 <strong>{selectedLineageNode.label}</strong>
               </div>
-              <div className="lineage-detail-actions">
-                <p>改编人：{selectedLineageNode.author}</p>
-                <a href={`#/remix/${selectedLineageNode.id}`}>查看改编作品</a>
-              </div>
+              {isOriginalLineageNode ? (
+                <div className="lineage-detail-note">原创起点</div>
+              ) : (
+                <div className="lineage-detail-actions">
+                  <p>改编人：{selectedLineageNode.author}</p>
+                  <a href={`#/remix/${selectedLineageNode.id}`}>查看改编作品</a>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -3549,7 +4092,7 @@ function FuelPublishDialog({
 
         <div className="fuel-dialog-body">
           <section className="fuel-dialog-aside">
-            <div className="fuel-dialog-label">① 选择资源</div>
+            <div className="fuel-dialog-label">① 选择作品</div>
             <div className="fuel-work-stack">
               {fuelWorks.map((work, index) => (
                 <button
@@ -3664,7 +4207,7 @@ function RelatedResourceCard({
           {card.title}
         </h3>
         <div className="related-author">
-          <div className={`avatar related-avatar ${isActivity ? 'related-avatar--gold' : ''}`}>{card.author.slice(0, 1)}</div>
+          <UserAvatar name={card.author} className={`avatar related-avatar ${isActivity ? 'related-avatar--gold' : ''}`} />
           <span>{card.author}</span>
         </div>
         <div className="related-stats">
@@ -3714,7 +4257,7 @@ function TeacherProfileCard({
       <div className="teacher-card-body">
         <div className="teacher-card-main">
           <div className="teacher-avatar-wrap">
-            <div className="avatar teacher-avatar teacher-avatar--inline">{teacher.avatar}</div>
+            <UserAvatar name={teacher.name} fallback={teacher.avatar} className="avatar teacher-avatar teacher-avatar--inline" />
           </div>
           <div className="teacher-card-title">
             <h3>
@@ -3953,7 +4496,7 @@ function InspirationCardItem({
           disabled={!canOpenAuthor}
           aria-label={canOpenAuthor ? '进入王清越主页' : undefined}
         >
-          <div className="avatar">{card.author.slice(0, 1)}</div>
+          <UserAvatar name={card.author} />
           <div>
             <strong>
               {card.author}

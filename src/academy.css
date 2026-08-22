@@ -27,8 +27,9 @@
 .academy-banner-image {
   display: block;
   width: 100%;
-  aspect-ratio: 2400 / 760;
+  aspect-ratio: 16 / 7;
   object-fit: cover;
+  object-position: center 15%;
 }
 
 .academy-banner-status {

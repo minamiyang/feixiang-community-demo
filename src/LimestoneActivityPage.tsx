@@ -24,7 +24,7 @@ import cover4 from './assets/covers/cover-4.png'
 import cover5 from './assets/covers/cover-5.png'
 import cover6 from './assets/covers/cover-6.png'
 import cover7 from './assets/covers/cover-7.png'
-import cover8 from './assets/covers/cover-8.png'
+
 import './LimestoneActivityPage.css'
 
 type WorkTone = 'green' | 'orange' | 'blue' | 'red'

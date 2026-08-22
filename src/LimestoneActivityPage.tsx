@@ -13,6 +13,10 @@ import {
   ThumbsUp,
 } from 'lucide-react'
 import activityBanner from './assets/activity-banner-clean.png'
+import cardShihui1 from './assets/card-shihui-1.png'
+import cardShihui2 from './assets/card-shihui-2.png'
+import cardShihui3 from './assets/card-shihui-3.png'
+import cardShihui4 from './assets/card-shihui-4.png'
 import cover1 from './assets/covers/cover-1.png'
 import cover2 from './assets/covers/cover-2.png'
 import cover3 from './assets/covers/cover-3.png'
@@ -53,10 +57,10 @@ const winningWorks = [
 const works: WorkCard[] = [
   {
     id: 'stone-gates',
-    title: '《石灰吟》别再干讲了，我用闯关把“托物言志”讲活了',
+    title: '你的“石灰”是什么？让每个孩子写一首自己的《石灰吟》',
     author: '王清越',
     school: '中关村三小 · 语文老师',
-    image: cover1,
+    image: cardShihui4,
     tone: 'green',
     summary: '把物象、品格、志向拆成三关，小组拖拽关键词后现场抢答。',
     saves: 6128,
@@ -78,10 +82,10 @@ const works: WorkCard[] = [
   },
   {
     id: 'stone-ledger',
-    title: '一张小组评价表，追踪“清白”解释是否到位',
+    title: '用一张思维导图，带学生读懂《石灰吟》中的“托物言志”',
     author: '陆遇友',
     school: '南京 · 语文备课组',
-    image: cover4,
+    image: cardShihui1,
     tone: 'blue',
     summary: '每轮讨论后自动记录发言、证据引用和同伴补充，课后不用补账。',
     saves: 203,
@@ -118,10 +122,10 @@ const works: WorkCard[] = [
   },
   {
     id: 'stone-map',
-    title: '学生写不出托物言志？我先做了一张 AI 写作迁移地图',
+    title: '“石灰精神”在今天还值不值得推崇？我发起了一场真实的辩论',
     author: 'TeacherYO',
     school: '深圳 · 项目式学习',
-    image: cover8,
+    image: cardShihui2,
     tone: 'blue',
     summary: '从石灰迁移到竹、梅、松，学生点选物象后生成练笔支架。',
     saves: 4320,
@@ -155,10 +159,10 @@ const works: WorkCard[] = [
   },
   {
     id: 'stone-lowgrade',
-    title: '低年级也能玩：先不讲“志向”，只做物象品质配对',
+    title: '带学生体验石灰烧制过程后，他们终于理解了《石灰吟》',
     author: '沈白露',
     school: '深圳 · 低年级语文',
-    image: cover8,
+    image: cardShihui3,
     tone: 'blue',
     summary: '把抽象概念降成两步配对，适合二三年级迁移使用。',
     saves: 421,

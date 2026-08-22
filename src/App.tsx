@@ -38,6 +38,7 @@ import {
 } from 'lucide-react'
 import cover1 from './assets/covers/cover-1.png'
 import cover2 from './assets/covers/cover-2.png'
+import zufuTingzhen from './assets/zhufu-tingzhen.jpg'
 import cover3 from './assets/covers/cover-3.png'
 import cover4 from './assets/covers/cover-4.png'
 import cover5 from './assets/covers/cover-5.png'
@@ -652,6 +653,7 @@ const coverImageByTitle: Record<string, string> = {
   '《石灰吟》别再干讲了，我用闯关把“托物言志”讲活了': cover1,
   '《石灰吟》同题创作活动：同一首诗，看看大家怎么上': teacherPhilosophyPosterBackground,
   '期末古诗默写太枯燥？我改成全班抢答赛了': cover2,
+  '我把《祝福》改成了一场庭审，学生为祥林嫂的死因吵了整节课': zufuTingzhen,
   '上《桂花雨》前，先让孩子办一场“气味记忆展”': cover3,
   '一张自动积分表，让小组评价终于不用课后补账': cover4,
   '《少年中国说》朗读没气势？试试这个分角色训练台': cover5,
@@ -921,7 +923,7 @@ const cards: InspirationCard[] = [
     hotCommentLikes: 236,
   },
   {
-    title: '期末古诗默写太枯燥？我改成全班抢答赛了',
+    title: '我把《祝福》改成了一场庭审，学生为祥林嫂的死因吵了整节课',
     author: '林若水',
     savedCount: 1314,
     remixCount: 184,
